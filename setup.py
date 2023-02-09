@@ -19,7 +19,7 @@ setup(
         'highcharts.highstock': ['templates/*.html']
     },
     url='https://github.com/vertica/vertica-highcharts',
-    download_url='https://github.com/vertica/vertica-highcharts/tarball/' + ns['__version__'],
+    download_url='https://github.com/vertica/vertica-highcharts/releases/tag/' + ns['__version__'],
     description='Python Highcharts wrapper',
     install_requires=[
         "Jinja2",
