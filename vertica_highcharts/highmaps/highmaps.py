@@ -30,7 +30,7 @@ from .common import Formatter, CSSObject, SVGObject, MapObject, JSfunction, RawJ
 CONTENT_FILENAME = "./content.html"
 PAGE_FILENAME = "./page.html"
 
-pl = PackageLoader('highcharts.highmaps', 'templates')
+pl = PackageLoader('vertica_highcharts.highmaps', 'templates')
 jinja2_env = Environment(lstrip_blocks=True, trim_blocks=True, loader=pl)
 
 template_content = jinja2_env.get_template(CONTENT_FILENAME)
