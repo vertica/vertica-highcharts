@@ -294,7 +294,7 @@ class Highmap(object):
         use if the mapData is loaded directly from a https source
         the map_src is the https link for the mapData
         geojson (from jsonp) or .js formates are acceptable
-        default is js script from highcharts' map collection: https://code.highcharts.com/mapdata/
+        default is js script from vertica_highcharts' map collection: https://code.highcharts.com/mapdata/
         """
 
         if not map_src:

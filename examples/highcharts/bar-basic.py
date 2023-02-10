@@ -4,7 +4,7 @@ Highcharts Demos
 Basic bar: http://www.highcharts.com/demo/bar-basic
 """
 
-from highcharts import Highchart
+from vertica_highcharts import Highchart
 H = Highchart(width=750, height=600)
 
 data1 = [107, 31, 635, 203, 2]

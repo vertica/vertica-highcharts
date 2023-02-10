@@ -4,7 +4,7 @@ Highcharts Demos
 Error bar: http://www.highcharts.com/demo/error-bar
 """
 
-from highcharts import Highchart
+from vertica_highcharts import Highchart
 H = Highchart(width=550, height=400)
 
 options = {

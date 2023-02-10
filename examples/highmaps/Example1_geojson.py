@@ -16,17 +16,17 @@ In highmaps, the map data can be input in multiple ways:
 2. set_map_source method:
     set_map_source(map_src, jsonp_map = False)
     map_src is the url (https) where map data is located,
-    it is recommended to get map data from highcharts' map collection: 
+    it is recommended to get map data from vertica_highcharts' map collection: 
     https://code.highcharts.com/mapdata/
     jsonp_map is boolean parameter if mapdata is loaded from jsonp
     geojson (from jsonp) or .js are accepted formats. 
-    default is javascript (.js) format (from highcharts)
+    default is javascript (.js) format (from vertica_highcharts)
 
 The following example is from Highmaps Demos
 GeoJSON areas: http://www.highcharts.com/maps/demo/geojson
 """
 
-from highcharts import Highmap
+from vertica_highcharts import Highmap
 H = Highmap(width = 650, height = 500)
 
 options = { # construct option dict

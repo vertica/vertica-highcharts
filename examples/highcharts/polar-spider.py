@@ -4,7 +4,7 @@ Highcharts Demos
 Spiderweb: http://www.highcharts.com/demo/polar-spider
 """
 
-from highcharts import Highchart
+from vertica_highcharts import Highchart
 H = Highchart(width=550, height=400)
 
 options = {
