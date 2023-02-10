@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 here = os.path.abspath(os.path.dirname(__file__))
 
 ns = {}
-with open(os.path.join(here, 'highcharts', 'version.py')) as f:
+with open(os.path.join(here, 'vertica_highcharts', 'version.py')) as f:
    exec(f.read(), {}, ns)
 
 setup(
@@ -14,9 +14,9 @@ setup(
     author_email='developers@kyperdata.com',
     packages=find_packages(),
     package_data={
-        'highcharts.highcharts': ['templates/*.html'],
-        'highcharts.highmaps': ['templates/*.html'],
-        'highcharts.highstock': ['templates/*.html']
+        'vertica_highcharts.highcharts': ['templates/*.html'],
+        'vertica_highcharts.highmaps': ['templates/*.html'],
+        'vertica_highcharts.highstock': ['templates/*.html']
     },
     url='https://github.com/vertica/vertica-highcharts',
     download_url='https://github.com/vertica/vertica-highcharts/releases/tag/' + ns['__version__'],
