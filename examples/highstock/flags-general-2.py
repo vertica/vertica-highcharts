@@ -12,8 +12,8 @@ are used to fix the problem.
 """
 
 import datetime
-from highcharts import Highstock
-from highcharts.highstock.highstock_helper import jsonp_loader
+from vertica_highcharts import Highstock
+from vertica_highcharts.highstock.highstock_helper import jsonp_loader
 H = Highstock()
 
 data_url = 'http://www.highcharts.com/samples/data/jsonp.php?filename=usdeur.json&callback=?'

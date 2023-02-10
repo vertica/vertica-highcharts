@@ -3,38 +3,40 @@
 from __future__ import unicode_literals, absolute_import
 from future.standard_library import install_aliases
 install_aliases()
+from past.builtins import basestring
 
 from jinja2 import Environment, PackageLoader
 
 import json, uuid
 import re
 import datetime
+import urllib.request, urllib.error, urllib.parse
 import html
 from collections.abc import Iterable
-from .options import BaseOptions, ChartOptions, \
-    ColorsOptions, CreditsOptions, ExportingOptions, \
+from .options import BaseOptions, ChartOptions, ColorAxisOptions, \
+    ColorsOptions, CreditsOptions, DrilldownOptions, ExportingOptions, \
     GlobalOptions, LabelsOptions, LangOptions, \
-    LegendOptions, LoadingOptions, NavigatorOptions, NavigationOptions, \
-    PlotOptions, RangeSelectorOptions, ScrollbarOptions, SeriesData, SubtitleOptions, TitleOptions, \
-    TooltipOptions, xAxisOptions, yAxisOptions, MultiAxis
+    LegendOptions, LoadingOptions, NavigationOptions, PaneOptions, \
+    PlotOptions, SeriesData, SubtitleOptions, TitleOptions, \
+    TooltipOptions, xAxisOptions, yAxisOptions, zAxisOptions, MultiAxis
 
-from .highstock_types import Series, SeriesOptions
+from .highchart_types import Series, SeriesOptions
 from .common import Levels, Formatter, CSSObject, SVGObject, JSfunction, RawJavaScriptText, \
     CommonObject, ArrayObject, ColorObject
 
-CONTENT_FILENAME = "./content.html"
-PAGE_FILENAME = "./page.html"
+CONTENT_FILENAME = "content.html"
+PAGE_FILENAME = "page.html"
 
-pl = PackageLoader('highcharts.highstock', 'templates')
+pl = PackageLoader('vertica_highcharts.highcharts', 'templates')
 jinja2_env = Environment(lstrip_blocks=True, trim_blocks=True, loader=pl)
 
 template_content = jinja2_env.get_template(CONTENT_FILENAME)
 template_page = jinja2_env.get_template(PAGE_FILENAME)
     
 
-class Highstock(object):
+class Highchart(object):
     """
-    Highstock Base class.
+    Highcharts Base class.
     """
     #: chart count
     count = 0
@@ -50,6 +52,9 @@ class Highstock(object):
         This is the base class for all the charts. The following keywords are
         accepted:
         :keyword: **display_container** - default: ``True``
+                  **offline - default: ``False``
+                            If True, download all .js and .css file and put them
+                            into the generated .html so it can be viewed offline.
         """
         # set the model
         self.model = self.__class__.__name__  #: The chart model,
@@ -58,13 +63,15 @@ class Highstock(object):
         # an Instance of Jinja2 template
         self.template_page_highcharts = template_page
         self.template_content_highcharts = template_content
+
         
         # set Javascript src, Highcharts lib needs to make sure it's up to date
         self.JSsource = [
                 'https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',
-                'https://code.highcharts.com/stock/6/highstock.js',
-                'https://code.highcharts.com/stock/6/modules/exporting.js',
+                'https://code.highcharts.com/6/highcharts.js',
                 'https://code.highcharts.com/6/highcharts-more.js',
+                'https://code.highcharts.com/6/modules/heatmap.js',
+                'https://code.highcharts.com/6/modules/exporting.js'
             ]
 
         # set CSS src
@@ -72,19 +79,20 @@ class Highstock(object):
                 'https://www.highcharts.com/highslide/highslide.css',
 
             ]
+
+        self.offline = kwargs.get("offline", False)
+
         # set data
         self.data = []
         self.data_temp = []
-
-        # set navigator series
-        self.navi_seri_flag = False
-        self.navi_seri = {}
-        self.navi_seri_temp = {}
-
         # Data from jsonp
         self.jsonp_data_flag = False
-        self.jsonp_data_url_list = [] # DEM 2017/04/25: List of JSON data sources
-        
+        self.jsonp_data_url_list = [] # DEM 2017/07/27: List of JSON data sources
+
+        # set drilldown data
+        self.drilldown_data = []
+        self.drilldown_data_temp = []
+
         # javascript
         self.jscript_head_flag = False
         self.jscript_head = kwargs.get('jscript_head', None)
@@ -93,7 +101,7 @@ class Highstock(object):
 
         # accepted keywords
         self.div_style = kwargs.get('style', '')
-        self.date_flag = kwargs.get('date_flag', False)
+        self.drilldown_flag = kwargs.get('drilldown_flag', False)
 
         # None keywords attribute that should be modified by methods
         # We should change all these to _attr
@@ -111,24 +119,24 @@ class Highstock(object):
         # Bind Base Classes to self
         self.options = {
             "chart": ChartOptions(),
+            #"colorAxis" : ColorAxisOptions(),
             "colors": ColorsOptions(),
             "credits": CreditsOptions(),
             #"data": #NotImplemented
+            "drilldown": DrilldownOptions(),
             "exporting": ExportingOptions(),
             "labels": LabelsOptions(),
             "legend": LegendOptions(),
             "loading": LoadingOptions(),
             "navigation": NavigationOptions(),
-            "navigator": NavigatorOptions(),
+            "pane": PaneOptions(),
             "plotOptions": PlotOptions(),
-            "rangeSelector": RangeSelectorOptions(),
-            "scrollbar": ScrollbarOptions(),
             "series": SeriesData(),
             "subtitle": SubtitleOptions(),
             "title": TitleOptions(),
             "tooltip": TooltipOptions(),
             "xAxis": xAxisOptions(),
-            "yAxis": yAxisOptions(),
+            "yAxis": yAxisOptions(),   
         }
 
         self.setOptions = {
@@ -187,17 +195,38 @@ class Highstock(object):
             raise OptionTypeError("Option: %s Not Allowed For Series Type: %s" % type(new_src))
 
 
+    def add_3d_rotation(self):
+        self.options3d_rotation_flag = True
+
     def add_data_set(self, data, series_type="line", name=None, **kwargs):
-        """set data for series option in highstocks"""
+        """set data for series option in highcharts"""
 
         self.data_set_count += 1
         if not name:
             name = "Series %d" % self.data_set_count
         kwargs.update({'name':name})
 
+        if series_type == 'treemap':
+            self.add_JSsource('http://code.highcharts.com/modules/treemap.js')
+
         series_data = Series(data, series_type=series_type, **kwargs)
+       
         series_data.__options__().update(SeriesOptions(series_type=series_type, **kwargs).__options__())
         self.data_temp.append(series_data)
+
+
+    def add_drilldown_data_set(self, data, series_type, id, **kwargs):
+        """set data for drilldown option in highcharts"""
+
+        self.drilldown_data_set_count += 1
+        if self.drilldown_flag == False:
+            self.drilldown_flag = True
+
+        kwargs.update({'id':id})
+        series_data = Series(data, series_type=series_type, **kwargs)
+
+        series_data.__options__().update(SeriesOptions(series_type=series_type, **kwargs).__options__())
+        self.drilldown_data_temp.append(series_data)
 
 
     def add_data_from_jsonp(self, data_src, data_name='json_data', series_type="line", name=None, **kwargs):
@@ -207,38 +236,15 @@ class Highstock(object):
         """
         if not self.jsonp_data_flag:
             self.jsonp_data_flag = True
-            
+
             if data_name == 'data':
                 data_name = 'json_'+ data_name
-            
+
             self.jsonp_data = data_name
-        self.add_data_set(RawJavaScriptText(self.jsonp_data), series_type, name=name, **kwargs)
-        # DEM 2017/04/25: Append new JSON data source to a list instead of
+        self.add_data_set(RawJavaScriptText(data_name), series_type, name=name, **kwargs)
+        # DEM 2017/07/27: Append new JSON data source to a list instead of
         #                 replacing whatever already exists
         self.jsonp_data_url_list.append(json.dumps(data_src))
-
-
-    def add_navi_series(self, data, series_type="line", **kwargs):
-        """set series for navigator option in highstocks"""
-
-        self.navi_seri_flag = True
-        series_data = Series(data, series_type=series_type, **kwargs)
-        series_data.__options__().update(SeriesOptions(series_type=series_type, **kwargs).__options__())           
-        self.navi_seri_temp = series_data
-
-    def add_navi_series_from_jsonp(self, data_src=None, data_name='json_data', series_type="line", **kwargs):
-        """set series for navigator option in highstocks"""
-
-        if not self.jsonp_data_flag:
-            self.jsonp_data_flag = True
-            self.jsonp_data_url = json.dumps(data_src) 
-            
-            if data_name == 'data':
-                data_name = 'json_'+ data_name
-            
-            self.jsonp_data = data_name
-        
-        self.add_navi_series(RawJavaScriptText(self.jsonp_data), series_type, **kwargs)
 
 
     def add_JSscript(self, js_script, js_loc):
@@ -273,10 +279,20 @@ class Highstock(object):
                 self.options[option_type].update(**each_dict)
         elif option_type == 'colors':
             self.options["colors"].set_colors(option_dict) # option_dict should be a list
+        elif option_type == 'zAxis':
+            self.options.update({'zAxis': zAxisOptions()})
+            self.options[option_type].update_dict(**option_dict)
         elif option_type in ["global" , "lang"]: #Highcharts.setOptions: 
             self.setOptions[option_type].update_dict(**option_dict)
+        elif option_type == 'colorAxis':
+            self.options.update({'colorAxis': ColorAxisOptions()})
+            self.options[option_type].update_dict(**option_dict)
         else:
             self.options[option_type].update_dict(**option_dict)
+
+        if option_type == 'chart' and 'options3d' in option_dict:
+            # Add 3d.js into Javascript source header
+            self.add_JSsource("http://code.highcharts.com/highcharts-3d.js")
 
 
     def set_dict_options(self, options):
@@ -295,17 +311,16 @@ class Highstock(object):
 
         self.buildcontainer()
         self.option = json.dumps(self.options, cls = HighchartsEncoder)
-        self.setoption = json.dumps(self.setOptions, cls = HighchartsEncoder) 
+        self.setoption = json.dumps(self.setOptions, cls = HighchartsEncoder)
         self.data = json.dumps(self.data_temp, cls = HighchartsEncoder)
 
         # DEM 2017/04/25: Make 'data' available as an array
         # ... this permits jinja2 array access to each data definition
         # ... which is useful for looping over multiple data sources
         self.data_list = [json.dumps(x, cls = HighchartsEncoder) for x in self.data_temp]
-        
-        if self.navi_seri_flag:        
-            self.navi_seri = json.dumps(self.navi_seri_temp, cls = HighchartsEncoder)
 
+        if self.drilldown_flag: 
+            self.drilldown_data = json.dumps(self.drilldown_data_temp, cls = HighchartsEncoder)
         self._htmlcontent = self.template_content_highcharts.render(chart=self).encode('utf-8')
 
 
@@ -323,14 +338,31 @@ class Highstock(object):
 
     def buildhtmlheader(self):
         """generate HTML header content"""
+        
+        if self.drilldown_flag:
+            self.add_JSsource('http://code.highcharts.com/modules/drilldown.js')
 
-        self.header_css = [
-            '<link href="%s" rel="stylesheet" />' % h for h in self.CSSsource
-        ]
 
-        self.header_js = [
-            '<script type="text/javascript" src="%s"></script>' % h for h in self.JSsource
-        ]
+
+        if self.offline:
+            opener = urllib.request.build_opener()
+            opener.addheaders = [('User-Agent', 'Mozilla/5.0')]
+
+            self.header_css = [
+                '<style>%s</style>' % opener.open(h).read() for h in self.CSSsource
+            ]
+
+            self.header_js = [
+                '<script type="text/javascript">%s</script>' % opener.open(h).read() for h in self.JSsource
+            ]
+        else:
+            self.header_css = [
+                '<link href="%s" rel="stylesheet" />' % h for h in self.CSSsource
+            ]
+
+            self.header_js = [
+                '<script type="text/javascript" src="%s"></script>' % h for h in self.JSsource
+            ]
 
         self.htmlheader = ''
         for css in self.header_css:
@@ -379,13 +411,14 @@ class Highstock(object):
                 return '<iframe style="border:0;outline:none;overflow:hidden" srcdoc="'+ htmlsrcdoc + '" height='+ str(height) + ' width=' + str(width) + '></iframe>'
         else:
             return '<iframe style="border:0;outline:none;overflow:hidden" srcdoc="'+ htmlsrcdoc + '" height='+ str(height) + ' width=' + str(width) + '></iframe>'
+    
 
     def __str__(self):
         """return htmlcontent"""
         #self.buildhtml()
         return self.htmlcontent
 
-    def save_file(self, filename = 'StockChart'):
+    def save_file(self, filename = 'Chart'):
         """ save htmlcontent as .html file """
         filename = filename + '.html'
         
@@ -425,7 +458,7 @@ class HighchartsEncoder(json.JSONEncoder):
     def encode(self, obj):
         result = json.JSONEncoder.encode(self, obj)
         for k, v in self._replacement_map.items():
-            result = result.replace('"%s"' % (k,), v)
+            result = result.replace('"{}"'.format(k), v)
         return result
 
 

@@ -4,7 +4,7 @@ Highcharts Demos
 Box plot: http://www.highcharts.com/demo/box-plot
 """
 
-from highcharts import Highchart
+from vertica_highcharts import Highchart
 H = Highchart(width=550, height=400)
 
 options = {

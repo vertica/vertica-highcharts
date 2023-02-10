@@ -4,7 +4,7 @@ Highcharts Demos
 Pie chart, line and column: http://www.highcharts.com/demo/pie-basic
 """
 import datetime
-from highcharts import Highchart
+from vertica_highcharts import Highchart
 
 H = Highchart(width=850, height=400)
 

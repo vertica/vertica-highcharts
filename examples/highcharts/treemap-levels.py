@@ -4,7 +4,7 @@ Highcharts Demos
 Treemap levels: http://jsfiddle.net/gh/get/jquery/1.7.2/highslide-software/highcharts.com/tree/master/samples/highcharts/plotoptions/treemap-levels/
 """
 
-from highcharts import Highchart
+from vertica_highcharts import Highchart
 H = Highchart(width=550, height=400)
 
 options = {

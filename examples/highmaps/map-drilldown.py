@@ -4,8 +4,8 @@ Highmaps Demos
 Drilldown: http://www.highcharts.com/maps/demo/map-drilldown
 """
 
-from highcharts import Highmap
-from highcharts.highmaps.highmap_helper  import jsonp_loader, js_map_loader, geojson_handler
+from vertica_highcharts import Highmap
+from vertica_highcharts.highmaps.highmap_helper  import jsonp_loader, js_map_loader, geojson_handler
 
 """
 Drilldown is a techique to present data in different detail level. 
@@ -66,7 +66,7 @@ Drilldown_functions_dict = {
 H = Highmap()
 
 """
-Drilldown map requires an additional JS library from highcharts, which can be added using
+Drilldown map requires an additional JS library from vertica_highcharts, which can be added using
 add_JSsource method
 Also, it needs a bootstrap CSS file, which is added using add_CSSsource method
 """

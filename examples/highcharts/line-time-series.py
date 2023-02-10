@@ -5,7 +5,7 @@ Time series, zoomable: http://www.highcharts.com/demo/line-time-series
 """
 
 import datetime
-from highcharts import Highchart
+from vertica_highcharts import Highchart
 
 H = Highchart()
 
