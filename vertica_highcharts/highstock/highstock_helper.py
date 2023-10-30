@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
-from future.standard_library import install_aliases
-install_aliases()
+try:
+    from future.standard_library import install_aliases
+
+    install_aliases()
+except:
+    import warnings
+
+    warnings.warn('future library does not support Python 3.12 yet. The import is skipped.')
 from past.builtins import basestring
 
 from urllib.request import urlopen
