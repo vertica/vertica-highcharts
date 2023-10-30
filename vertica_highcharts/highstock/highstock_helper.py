@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-from future.standard_library import install_aliases
-install_aliases()
+try:
+    from future.standard_library import install_aliases
+
+    install_aliases()
+except:
+    import warnings
 from past.builtins import basestring
 
 from urllib.request import urlopen
