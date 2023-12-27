@@ -271,7 +271,7 @@ class CommonObject(object):
                         else:
                             self.__options__()[k].__options__().update(v)
                     else:
-                        self.__options__().update({k:allowed_args[k][0](**v)}) 
+                        self.__options__().update({k:self.ALLOWED_OPTIONS[k][0](**v)}) 
 
                 elif isinstance(self.ALLOWED_OPTIONS[k], tuple) and isinstance(self.ALLOWED_OPTIONS[k][0](), ArrayObject):
                     # update array 
@@ -289,7 +289,7 @@ class CommonObject(object):
                         for key, value in v.items():
                             self.__dict__[k].__options__().update({key:value})
                     else:
-                        self.__dict__.update({k:allowed_args[k][0](**v)})
+                        self.__dict__.update({k:self.ALLOWED_OPTIONS[k][0](**v)})
                     
                     v = self.__dict__[k].__options__()
                     # upating object
